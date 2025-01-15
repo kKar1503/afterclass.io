@@ -154,6 +154,7 @@ export const authConfig = {
         });
 
         if (user) {
+          user._dbID = user.id;
           return await identifyUser(user);
         }
 
@@ -187,6 +188,7 @@ export const authConfig = {
           },
         });
 
+        newUser._dbID = newUser.id;
         return identifyUser(newUser);
       },
     }),
@@ -209,8 +211,16 @@ export const authConfig = {
       if (token.sub && user) {
         // strip user object of unwanted sensitive fields before populating to token
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { deprecatedPasswordDigest, ...rest } = user as Users;
+        const { deprecatedPasswordDigest, ...rest } = user as Users & {
+          _dbID?: string;
+        };
         // to expose user object in session
+
+        if (rest._dbID) {
+          rest.id = rest._dbID;
+          delete rest._dbID;
+        }
+
         token.user = rest;
       }
       return token;
